@@ -10,10 +10,47 @@ blogRouter.get('/', async (request, response) => {
 
 //add a blog to server
 blogRouter.post('/', async (request, response) => {
-  const blog = new Blog(request.body)
+  const body = request.body
+
+  const blog = new Blog({
+    title: body.title,
+    author: body.author,
+    url: body.url,
+    likes: body.likes
+  })
 
   const savedBlog = await blog.save();
   response.status(201).json(savedBlog);
+})
+
+//get by id
+blogRouter.get('/:id', async (request, response) => {
+  const id = request.params.id;
+  const toReturn = await Blog.findById(id);
+  response.json(toReturn)
+})
+
+//adjust with id
+blogRouter.put('/:id', async (request, response) => {
+  const id = request.params.id
+  const adjustment = request.body;
+
+  const adjustedblog = {
+    title: adjustment.title,
+    author: adjustment.author,
+    url: adjustment.url,
+    likes: adjustment.likes
+  }
+
+  const result = await Blog.findByIdAndUpdate(id, adjustedblog)
+  response.status(200).json(result)
+})
+
+//delete
+blogRouter.delete('/:id', async (request, response) => {
+  const id = request.params.id
+  const result = await Blog.findByIdAndDelete(id)
+  response.status(204).json(result)
 })
 
 module.exports = blogRouter
