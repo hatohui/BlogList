@@ -12,6 +12,7 @@ const middleware = require('./utils/middleware')
 
 //importing routers
 const blogRouter = require('./controllers/blogger')
+const usersRouter = require('./controllers/users')
 
 //connecting to database
 logger.info('connecting to', config.DB_URL);
@@ -34,6 +35,7 @@ app.use(middleware.requestLogger)
 
 //loading routers
 app.use('/api/blogs', blogRouter)
+app.use('/api/users', usersRouter)
 
 //loading errorHandlers
 app.use(middleware.unknownEndpoint)
