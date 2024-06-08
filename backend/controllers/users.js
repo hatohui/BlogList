@@ -15,7 +15,7 @@ usersRouter.post('/', async (request, response) => {
         password: passwordHashed,
         blogs: []
     })
-    
+
     const savedUser = await user.save()
     response.status(201).json(savedUser)
 })
@@ -30,6 +30,14 @@ usersRouter.get('/:id', async (request, response) => {
 //to get all user api
 usersRouter.get('/', async(request, response) => {
     const result = await User.find({})
+            .populate('blogs',
+                {
+                    title: 1,
+                    author: 1,
+                    url: 1,
+                    likes: 1
+                }
+            )
     response.json(result)
 })
 
