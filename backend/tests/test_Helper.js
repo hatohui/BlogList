@@ -16,11 +16,16 @@ const initialBlogs = [
     }
 ]
 
+const initialUser = {
+    "username": "root",
+    "name": "root",
+    "password": "$2b$10$IVIltwFHkYiAIVd/3mb2DudOUPT3.awln58ensneb3DJO8akNRFDi"
+}
+
 const nonExistingId = async () => {
     const blog = new Blog({title: "for removal"})
     await blog.save()
     await blog.deleteOne()
-
     return blog._id.toString()
 }
 
@@ -35,6 +40,7 @@ const blogsinDB = async () => {
 }
 
 module.exports = {
+    initialUser,
     initialBlogs,
     nonExistingId,
     blogsinDB,

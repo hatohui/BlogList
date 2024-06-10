@@ -40,7 +40,21 @@ const errorHandler = (error, req, res, next) => {
     next(error)
 }
 
+const tokenExtractor = (request, response, next) => {
+    const authorization = request.get('authorization')
+    console.log("\n \n Token reached \n \n")
+    if (authorization && authorization.startsWith('Bearer ')) {
+        request.token = authorization.replace('Bearer ', "")
+    } else {
+        response.status(401).json({
+            error: 'invalid token.'
+        })
+    }
+    next()
+}
+
 module.exports = {
+    tokenExtractor,
     requestLogger,
     unknownEndpoint,
     errorHandler

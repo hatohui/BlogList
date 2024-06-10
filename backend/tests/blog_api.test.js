@@ -5,6 +5,7 @@ const helper = require('./test_Helper')
 const assert = require('node:assert')
 const app = require('../app')
 const Blog = require('../models/blog')
+const User = require('../models/user')
 const api = supertest(app)
 
 //handle data returned
@@ -44,11 +45,161 @@ describe('data returned correctly', () => {
     })
 })
 
+describe('User creation', () => {
+    //initializes
+    beforeEach(async () => {
+        await User.deleteMany({})
+        await User.insertMany(helper.initialUser)
+        await Blog.deleteMany({})
+        await Blog.insertMany(helper.initialBlogs)
+    })
+
+    //Invalid username cannot be created
+    test('Invalid username cannot be posted with proper status code', async () => {
+        const userBefore = await helper.usersInDB()
+
+        const newUser = {
+            "username": "hi",
+            "password": "wee"
+        }
+
+        await api
+            .post('/api/users')
+            .send(newUser)
+            .expect(400)
+
+        const userAfter = await helper.usersInDB()
+        assert.strictEqual(userBefore.length, userAfter.length)
+    })
+
+    //not long enough password
+    test('Invalid password cannot be posted with proper status code', async () => {
+        const userBefore = await helper.usersInDB()
+
+        const r = {
+            "username": "hi123",
+            "password": "hi"
+        }
+
+        await api
+            .post('/api/users')
+            .send(r)
+            .expect(400)
+
+        const userAfter = await helper.usersInDB()
+        assert.strictEqual(userBefore.length, userAfter.length)
+    })
+
+    //Existed user cannot be added
+    test('User with existing nickname cannot be posted', async () => {
+        const userBefore = await helper.usersInDB()
+        
+        await api
+            .post('/api/users')
+            .send(helper.initialUser)
+            .expect(400)
+        
+        const usersAfter = await helper.usersInDB()
+        assert.strictEqual(userBefore.length, usersAfter.length)
+    })
+
+    //return proper error code and message
+    test('Invalid User return proper message', async () =>{ 
+        const invalidUsername = {
+            "username": "hi",
+            "password": "password"
+        }
+
+        const invalidPassword = {
+            "username": "hi123",
+            "password": "we"
+        }
+        const response_one = await api
+            .post('/api/users')
+            .send(helper.initialUser)
+
+        const response_two = await api
+            .post('/api/users')
+            .send(invalidUsername)
+        
+        const response_three = await api
+            .post('/api/users')
+            .send(invalidPassword)
+
+        assert.strictEqual(response_one.body.error, 'expected `username` to be unique')
+        assert.strictEqual(response_two.body.error, 'Invalid name or password.')
+        assert.strictEqual(response_three.body.error, 'Invalid name or password.')
+    })
+})
+
+describe('User verification', () => {
+    //initializes
+    beforeEach(async () => {
+        await User.deleteMany({})
+        await User.insertMany(helper.initialUser)
+        await Blog.deleteMany({})
+        await Blog.insertMany(helper.initialBlogs)
+    })
+
+    //user can login with correct password
+    test('User can log-in with valid password and token is received', async () => {
+        const user = {
+            "username": "root",
+            "password": "password"
+        }
+
+        const response = await api
+            .post('/api/login')
+            .send(user)
+            .expect(200)
+            .expect('Content-Type', /application\/json/)
+
+        assert(response.body.hasOwnProperty('token'))
+    })
+
+    //user cannot login with invalid password
+    test('Invalid password cannot login and valid message is returned', async () => {
+        const user = {
+            "username": "root",
+            "password": "thisisawrongpassword"
+        }
+
+        const response = await api
+            .post('/api/login')
+            .send(user)
+            .expect(401)
+
+        assert.deepStrictEqual(response.body.error,
+            'invalid username or password' 
+        )
+    })
+
+    //user cannot login with invalid username
+    test('Invalid username cannot login and valid message is returned', async () => {
+        const user = {
+            "username": "asdg",
+            "password": "password"
+        }
+
+        const response = await api
+            .post('/api/login')
+            .send(user)
+            .expect(401)
+
+        assert.deepStrictEqual(response.body.error,
+            'invalid username or password' 
+        )
+    })
+})
+
 
 //handle POST requests
 describe('POST verifications', () => {
     //initializes before each
     beforeEach(async () => {
+        await User.deleteMany({})
+        await User.insertMany(helper.initialUser)
+        const user = await User.find({})[0]                             
         await Blog.deleteMany({})
         await Blog.insertMany(helper.initialBlogs)
     })
@@ -59,12 +210,12 @@ describe('POST verifications', () => {
             "title": "TestBlog",
             "likes": 1245
         }
-    
+
         await api
             .post('/api/blogs')
             .send(newBlog)
             .expect(400)
-    
+
         const returned = await helper.blogsinDB()
         assert.strictEqual(helper.initialBlogs.length, returned.length)
     })
@@ -77,17 +228,17 @@ describe('POST verifications', () => {
             "url": "walaoeh",
             "likes": 1245
         }
-    
+
         await api
             .post('/api/blogs')
             .send(newBlog)
             .expect(201)
             .expect('Content-Type', /application\/json/)
-    
+
         const blogsAtEnd = await helper.blogsinDB()
         assert.deepStrictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
     })
-    
+
     //new POST data correctly
     test('POST data is saved correctly.', async () => {
         const newBlog = {
@@ -96,13 +247,13 @@ describe('POST verifications', () => {
             "url": "walaoeh",
             "likes": 1245
         }
-    
+
         await api
             .post('/api/blogs')
             .send(newBlog)
             .expect(201)
             .expect('Content-Type', /application\/json/)
-    
+
         const blogsAtEnd = await helper.blogsinDB()
         const lastBlog = blogsAtEnd[blogsAtEnd.length - 1]
         delete lastBlog.id
@@ -183,7 +334,7 @@ describe('deleting from database', () => {
         const blogsAtStart = await helper.blogsinDB()
         const toDetele = blogsAtStart[0].id
 
-        await api  
+        await api
             .delete(`/api/blogs/${toDetele}`)
             .expect(204)
 
@@ -218,7 +369,7 @@ describe('POST requests to adjust information', () => {
     test('Accurately adjusting with given ID', async () => {
         const blogsAtStart = await helper.blogsinDB()
         const toAdjust = blogsAtStart[0].id
-        
+
         const newBlog = {
             "title": "Heroes",
             "author": "Hello",
@@ -230,7 +381,7 @@ describe('POST requests to adjust information', () => {
             .put(`/api/blogs/${toAdjust}`)
             .send(newBlog)
             .expect(200)
-        
+
         const blogsAtEnd = await helper.blogsinDB()
         const blogToCheck = blogsAtEnd[0]
 

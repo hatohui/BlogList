@@ -9,6 +9,8 @@ require('express-async-errors')
 const config = require('./utils/config')
 const logger = require('./utils/logger')
 const middleware = require('./utils/middleware')
+app.use(middleware.tokenExtractor)
+
 
 //importing routers
 const blogRouter = require('./controllers/blogger')
