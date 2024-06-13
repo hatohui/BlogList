@@ -6,10 +6,9 @@ const mongoose = require('mongoose')
 require('express-async-errors')
 
 //initializes utils
+const middleware = require('./utils/middleware')
 const config = require('./utils/config')
 const logger = require('./utils/logger')
-const middleware = require('./utils/middleware')
-app.use(middleware.tokenExtractor)
 
 
 //importing routers
@@ -22,7 +21,8 @@ logger.info('connecting to', config.DB_URL);
 
 mongoose.set('strictQuery', false)
 
-mongoose.connect(config.DB_URL)
+async () => 
+await mongoose.connect(config.DB_URL)
     .then(() => {
         logger.info('connected to Database.')
     })
@@ -34,6 +34,7 @@ mongoose.connect(config.DB_URL)
 app.use(cors())
 app.use(express.static('dist'))
 app.use(express.json())
+app.use(middleware.tokenExtractor)
 app.use(middleware.requestLogger)
 
 //loading routers

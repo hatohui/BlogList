@@ -1,4 +1,43 @@
 const logger = require('./logger')
+const jwt = require('jsonwebtoken')
+const User = require('../models/user')
+
+const tokenExtractor = (request, response, next) => {
+    const authorization = request.get('authorization')
+    if (authorization && authorization.startsWith('Bearer ')) {
+        request.token = authorization.replace('Bearer ', "")
+    } else {
+        request.token = null
+    }
+
+    next()
+}
+
+const userExtractor = async (request, response, next) => {
+    const decodedToken = jwt.verify(request.token, process.env.SECRET)
+    
+    if (!decodedToken.id) {
+      return response.status(401).json({error: 'token invalid'})
+    } 
+
+    let user;
+
+    console.log("reachedd here")
+    if (request.body.length) {
+        console.log("request.body.length \n \n")
+        const body = request.body;
+        console.log("Body ", body)
+        user = await User.findById(body.user)
+    } else if (request.params.id)
+        console.log("idh \n \n")
+        console.log(request.params.id)
+        user = await User.findById(request.params.id)
+    
+    console.log(user)
+    request.user = user;
+
+    next()
+}
 
 const requestLogger = (req, res, next) => {
     logger.info('Method:', req.method)
@@ -28,11 +67,11 @@ const errorHandler = (error, req, res, next) => {
             error: 'expected `username` to be unique'
         })
     } else if (error.name === 'JsonWebTokenError') {
-        return response.status(401).json({
+        return res.status(401).json({
             error: 'token invalid'
         })
     } else if (error.name === 'TokenExpiredError') {
-        return response.status(401).json({
+        return res.status(401).json({
             error: 'token expired'
         })
     }
@@ -40,21 +79,9 @@ const errorHandler = (error, req, res, next) => {
     next(error)
 }
 
-const tokenExtractor = (request, response, next) => {
-    const authorization = request.get('authorization')
-    console.log("\n \n Token reached \n \n")
-    if (authorization && authorization.startsWith('Bearer ')) {
-        request.token = authorization.replace('Bearer ', "")
-    } else {
-        response.status(401).json({
-            error: 'invalid token.'
-        })
-    }
-    next()
-}
-
 module.exports = {
     tokenExtractor,
+    userExtractor,
     requestLogger,
     unknownEndpoint,
     errorHandler
