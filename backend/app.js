@@ -21,8 +21,7 @@ logger.info('connecting to', config.DB_URL);
 
 mongoose.set('strictQuery', false)
 
-async () => 
-await mongoose.connect(config.DB_URL)
+mongoose.connect(config.DB_URL)
     .then(() => {
         logger.info('connected to Database.')
     })

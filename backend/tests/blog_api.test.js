@@ -12,8 +12,18 @@ const api = supertest(app)
 describe('data returned correctly', () => {
     //initializes before each
     beforeEach(async () => {
+        await User.deleteMany({})
         await Blog.deleteMany({})
-        await Blog.insertMany(helper.initialBlogs)
+        await api.post('/api/users').send(helper.initialUser)
+        const token = await helper.getToken()
+        const user = await api.get('/api/users')
+        const toSend = {
+            "title": helper.initialBlogs[0].title,
+            "author": helper.initialBlogs[0].author,
+            "url": helper.initialBlogs[0].url,
+            "user": user.body[0]._id
+        }
+        await api.post('/api/blogs').send(toSend).set('Authorization', token)
     })
 
     //json test
@@ -45,13 +55,22 @@ describe('data returned correctly', () => {
     })
 })
 
+//handle user creation
 describe('User creation', () => {
     //initializes
     beforeEach(async () => {
         await User.deleteMany({})
-        await User.insertMany(helper.initialUser)
         await Blog.deleteMany({})
-        await Blog.insertMany(helper.initialBlogs)
+        await api.post('/api/users').send(helper.initialUser)
+        const token = await helper.getToken()
+        const user = await api.get('/api/users')
+        const toSend = {
+            "title": helper.initialBlogs[0].title,
+            "author": helper.initialBlogs[0].author,
+            "url": helper.initialBlogs[0].url,
+            "user": user.body[0]._id
+        }
+        await api.post('/api/blogs').send(toSend).set('Authorization', token)
     })
 
     //Invalid username cannot be created
@@ -109,7 +128,6 @@ describe('User creation', () => {
             "username": "hi",
             "password": "password"
         }
-
         const invalidPassword = {
             "username": "hi123",
             "password": "we"
@@ -132,13 +150,22 @@ describe('User creation', () => {
     })
 })
 
+//handle user verification
 describe('User verification', () => {
     //initializes
     beforeEach(async () => {
         await User.deleteMany({})
-        await User.insertMany(helper.initialUser)
         await Blog.deleteMany({})
-        await Blog.insertMany(helper.initialBlogs)
+        await api.post('/api/users').send(helper.initialUser)
+        const token = await helper.getToken()
+        const user = await api.get('/api/users')
+        const toSend = {
+            "title": helper.initialBlogs[0].title,
+            "author": helper.initialBlogs[0].author,
+            "url": helper.initialBlogs[0].url,
+            "user": user.body[0]._id
+        }
+        await api.post('/api/blogs').send(toSend).set('Authorization', token)
     })
 
     //user can login with correct password
@@ -192,71 +219,126 @@ describe('User verification', () => {
     })
 })
 
-
 //handle POST requests
 describe('POST verifications', () => {
     //initializes before each
     beforeEach(async () => {
         await User.deleteMany({})
-        await User.insertMany(helper.initialUser)
-        const user = await User.find({})[0]                             
         await Blog.deleteMany({})
-        await Blog.insertMany(helper.initialBlogs)
+        await api.post('/api/users').send(helper.initialUser)
+        const token = await helper.getToken()
+        const user = await api.get('/api/users')
+        const toSend = {
+            "title": helper.initialBlogs[0].title,
+            "author": helper.initialBlogs[0].author,
+            "url": helper.initialBlogs[0].url,
+            "user": user.body[0]._id
+        }
+        await api.post('/api/blogs').send(toSend).set('Authorization', token)
     })
 
     //POST with invalid blog
-    test('Invalid blogs are not posted', async () => {
+    test('Invalid blogs are not posted with valid message', async () => {
+        const blogsBefore = await helper.blogsinDB()
+        const users = await User.find({})
+        const user = users[0].id
+
         const newBlog = {
             "title": "TestBlog",
+            "likes": 1245,
+            "user": user
+        }
+
+        const token = await helper.getToken()
+
+        const response = await api
+            .post('/api/blogs')
+            .send(newBlog)
+            .set('Authorization', token)
+            .expect(400)
+                    
+        const returned = await helper.blogsinDB()
+        assert.strictEqual(blogsBefore.length, returned.length)
+        assert(response.body.error.includes('Blog validation failed'))
+    })
+
+    //post with a blog w invalid token
+    test('Invalid token cannot post', async () => {
+
+        const blogsBefore = await helper.blogsinDB()
+        
+        const token = "Bearer askldjalnjgosjfoiasdjfosaidjg"
+
+        const newBlog = {
+            "title": "TestBlog",
+            "author": "Hi ITS' ME",
+            "url": "walaoeh",
             "likes": 1245
         }
 
         await api
             .post('/api/blogs')
             .send(newBlog)
-            .expect(400)
+            .set('Authorization', token)
+            .expect(401)
 
-        const returned = await helper.blogsinDB()
-        assert.strictEqual(helper.initialBlogs.length, returned.length)
+        const blogsAfter = await helper.blogsinDB()
+        
+        assert.strictEqual(blogsBefore.length, blogsAfter.length)
     })
 
     //POST with valid blog
     test('POST successfully with a valid blog.', async () => {
+        const blogsBefore = await helper.blogsinDB()
+        const token = await helper.getToken()
+        const user = await User.find({})
+        const id = user[0].id
+        
         const newBlog = {
             "title": "TestBlog",
             "author": "Hi ITS' ME",
             "url": "walaoeh",
-            "likes": 1245
+            "likes": 1245,
+            "user": id
         }
 
         await api
             .post('/api/blogs')
             .send(newBlog)
+            .set('Authorization', token)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
         const blogsAtEnd = await helper.blogsinDB()
-        assert.deepStrictEqual(blogsAtEnd.length, helper.initialBlogs.length + 1)
+        assert.deepStrictEqual(blogsAtEnd.length, blogsBefore.length + 1)
     })
 
     //new POST data correctly
     test('POST data is saved correctly.', async () => {
+        const user = await User.find({})
+        const userid = user[0].id
+
         const newBlog = {
             "title": "TestBlog",
             "author": "Hi ITS' ME",
             "url": "walaoeh",
-            "likes": 1245
+            "likes": 1245,
+            'user': userid
         }
+        const token = await helper.getToken()
 
         await api
             .post('/api/blogs')
             .send(newBlog)
+            .set('Authorization', token)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
         const blogsAtEnd = await helper.blogsinDB()
         const lastBlog = blogsAtEnd[blogsAtEnd.length - 1]
         delete lastBlog.id
+        lastBlog['user'] = userid.toString()
+
         assert.deepStrictEqual(newBlog, lastBlog)
     })
 })
@@ -265,21 +347,36 @@ describe('POST verifications', () => {
 describe('Missing properties', () => {
     //initializes
     beforeEach(async () => {
+        await User.deleteMany({})
         await Blog.deleteMany({})
-        await Blog.insertMany(helper.initialBlogs)
+        await api.post('/api/users').send(helper.initialUser)
+        const token = await helper.getToken()
+        const user = await api.get('/api/users')
+        const toSend = {
+            "title": helper.initialBlogs[0].title,
+            "author": helper.initialBlogs[0].author,
+            "url": helper.initialBlogs[0].url,
+            "user": user.body[0]._id
+        }
+        await api.post('/api/blogs').send(toSend).set('Authorization', token)
     })
-
+    
     //likes automatically set to 0
     test('Missing likes property automatically set to 0', async () => {
+        const id = await helper.getUserId()
+        const token = await helper.getToken()
+
         const newBlog = {
             "title": "TestBlog",
             "author": "Hello",
-            "url": "hiya"
+            "url": "hiya",
+            "user": id
         }
 
         await api
             .post('/api/blogs')
             .send(newBlog)
+            .set('Authorization', token)
             .expect(201)
             .expect('Content-Type', /application\/json/)
 
@@ -290,34 +387,47 @@ describe('Missing properties', () => {
 
     //missing title
     test('Missing title blogs will not be posted with errorCode 400', async () => {
+        const id = await helper.getUserId()
+        const token = await helper.getToken()
+        const blogsAtStart = await helper.blogsinDB()
+
         const newBlog = {
             "author": "Hello",
-            "url": "Weeeee"
+            "url": "Weeeee",
+            "user": id
         }
 
         await api
             .post('/api/blogs')
             .send(newBlog)
+            .set('Authorization', token)
             .expect(400)
 
         const blogsAtEnd = await helper.blogsinDB()
-        assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+        assert.strictEqual(blogsAtEnd.length, blogsAtStart.length)
     })
 
     //missing url
     test('missing url blogs will not be posted with errorCode 400', async () => {
+        const token = await helper.getToken()
+        const id = await helper.getUserId()
+
+        const blogsAtStart = await helper.blogsinDB()
+
         const newBlog = {
             "title": "Hello",
             "author": "weee",
+            "user": id
         }
 
         await api
             .post('/api/blogs')
             .send(newBlog)
+            .set('Authorization', token)
             .expect(400)
 
         const blogsAtEnd = await helper.blogsinDB()
-        assert.strictEqual(blogsAtEnd.length, helper.initialBlogs.length)
+        assert.strictEqual(blogsAtEnd.length, blogsAtStart.length)
     })
 })
 
@@ -325,17 +435,29 @@ describe('Missing properties', () => {
 describe('deleting from database', () => {
     //initializes
     beforeEach(async () => {
+        await User.deleteMany({})
         await Blog.deleteMany({})
-        await Blog.insertMany(helper.initialBlogs)
+        await api.post('/api/users').send(helper.initialUser)
+        const token = await helper.getToken()
+        const user = await api.get('/api/users')
+        const toSend = {
+            "title": helper.initialBlogs[0].title,
+            "author": helper.initialBlogs[0].author,
+            "url": helper.initialBlogs[0].url,
+            "user": user.body[0]._id
+        }
+        await api.post('/api/blogs').send(toSend).set('Authorization', token)
     })
 
     //test deletion
     test('DELETE request remove an object', async () => {
         const blogsAtStart = await helper.blogsinDB()
         const toDetele = blogsAtStart[0].id
+        const token = await helper.getToken()
 
         await api
             .delete(`/api/blogs/${toDetele}`)
+            .set('Authorization', token)
             .expect(204)
 
         const blogsAtEnd = await helper.blogsinDB()
@@ -346,9 +468,11 @@ describe('deleting from database', () => {
     test('DETELE request remove the correct object', async () => {
         const blogsAtStart = await helper.blogsinDB()
         const toDelete = blogsAtStart[0].id
+        const token = await helper.getToken()
 
         await api
             .delete(`/api/blogs/${toDelete}`)
+            .set('Authorization', token)
             .expect(204)
 
         const blogsAtEnd = await helper.blogsinDB()
@@ -361,25 +485,39 @@ describe('deleting from database', () => {
 //checking POST methods
 describe('POST requests to adjust information', () => {
     beforeEach(async () => {
+        await User.deleteMany({})
         await Blog.deleteMany({})
-        await Blog.insertMany(helper.initialBlogs)
+        await api.post('/api/users').send(helper.initialUser)
+        const token = await helper.getToken()
+        const user = await api.get('/api/users')
+        const toSend = {
+            "title": helper.initialBlogs[0].title,
+            "author": helper.initialBlogs[0].author,
+            "url": helper.initialBlogs[0].url,
+            "user": user.body[0]._id
+        }
+        await api.post('/api/blogs').send(toSend).set('Authorization', token)
     })
 
     //check adjustment
     test('Accurately adjusting with given ID', async () => {
         const blogsAtStart = await helper.blogsinDB()
         const toAdjust = blogsAtStart[0].id
+        const token = await helper.getToken()
+        const userId = await helper.getUserId()
 
         const newBlog = {
             "title": "Heroes",
             "author": "Hello",
             "url": "weeee",
-            "likes": 1245
+            "likes": 1245,
+            "user": userId
         }
 
         await api
             .put(`/api/blogs/${toAdjust}`)
             .send(newBlog)
+            .set('Authorization', token)
             .expect(200)
 
         const blogsAtEnd = await helper.blogsinDB()

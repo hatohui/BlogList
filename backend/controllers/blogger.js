@@ -40,15 +40,17 @@ blogRouter.get('/:id', async (request, response) => {
 })
 
 //adjust with id
-blogRouter.put('/:id', async (request, response) => {
+blogRouter.put('/:id', middleware.userExtractor, async (request, response) => {
   const id = request.params.id
   const adjustment = request.body;
+  const user = request.user;
 
   const adjustedblog = {
     title: adjustment.title,
     author: adjustment.author,
     url: adjustment.url,
-    likes: adjustment.likes
+    likes: adjustment.likes,
+    user: user.id
   }
 
   const result = await Blog.findByIdAndUpdate(id, adjustedblog)
@@ -59,10 +61,11 @@ blogRouter.put('/:id', async (request, response) => {
 blogRouter.delete('/:id', middleware.userExtractor, async (request, response) => {
 
   const id = request.params.id
-  const result = await Blog.findByIdAndDelete(id)
   const user = request.user;
+
+  const result = await Blog.findByIdAndDelete(id)
   user.blogs = user.blogs.filter(blogId => blogId.toString() !== id)
-  console.log(user.blogs)
+  
   await user.save()
   response.status(204).json(result)
 })

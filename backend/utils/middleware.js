@@ -1,6 +1,7 @@
 const logger = require('./logger')
 const jwt = require('jsonwebtoken')
 const User = require('../models/user')
+const Blog = require('../models/blog')
 
 const tokenExtractor = (request, response, next) => {
     const authorization = request.get('authorization')
@@ -21,19 +22,15 @@ const userExtractor = async (request, response, next) => {
     } 
 
     let user;
+    const body = request.body;
+    const id = request.params.id;
 
-    console.log("reachedd here")
-    if (request.body.length) {
-        console.log("request.body.length \n \n")
-        const body = request.body;
-        console.log("Body ", body)
+    if (Object.keys(request.body).length) {
         user = await User.findById(body.user)
-    } else if (request.params.id)
-        console.log("idh \n \n")
-        console.log(request.params.id)
-        user = await User.findById(request.params.id)
-    
-    console.log(user)
+    } else {
+        const blog = await Blog.findById(id)
+        user = await User.findById(blog.user.toString())
+    }
     request.user = user;
 
     next()
