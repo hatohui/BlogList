@@ -19,7 +19,6 @@ blogRouter.post('/', middleware.userExtractor, async (request, response) => {
     title: body.title,
     author: body.author,
     url: body.url,
-    likes: body.likes,
     user: user.id
   })
   
@@ -54,6 +53,7 @@ blogRouter.put('/:id', middleware.userExtractor, async (request, response) => {
   }
 
   const result = await Blog.findByIdAndUpdate(id, adjustedblog)
+  console.log(result)
   response.status(200).json(result)
 })
 
@@ -65,9 +65,8 @@ blogRouter.delete('/:id', middleware.userExtractor, async (request, response) =>
 
   const result = await Blog.findByIdAndDelete(id)
   user.blogs = user.blogs.filter(blogId => blogId.toString() !== id)
-  
   await user.save()
-  response.status(204).json(result)
+  response.status(200).json(result)
 })
 
 module.exports = blogRouter

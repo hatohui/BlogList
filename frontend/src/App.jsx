@@ -1,24 +1,25 @@
 import { useState, useEffect } from 'react'
-import Blog from './components/Blog'
 import blogService from './services/blogs'
+import Login from './views/Login'
+import BlogDisplay from './views/BlogDisplay'
+import Notification from './components/Notification'
 
 const App = () => {
-  const [blogs, setBlogs] = useState([])
+  const [user, setUser] = useState(null)
 
   useEffect(() => {
-    blogService.getAll().then(blogs =>
-      setBlogs( blogs )
-    )  
+    const loggedInUser = window.localStorage.getItem('loggedInUser')
+    if (loggedInUser) {
+      const user = JSON.parse(loggedInUser)
+      setUser(user)
+      blogService.setToken(user.token)
+    }
   }, [])
 
-  return (
-    <div>
-      <h2>blogs</h2>
-      {blogs.map(blog =>
-        <Blog key={blog.id} blog={blog} />
-      )}
-    </div>
-  )
+  return <div>
+    {user === null && <Login setUser={setUser}/>}
+    {user !== null && <BlogDisplay setUser={setUser} user={user}/>}
+  </div>
 }
 
 export default App

@@ -4,22 +4,21 @@ const mongoose = require('mongoose')
 const blogSchema = new mongoose.Schema({
     title: {
         type: String,
-        required: true,
-        minlength: 3
+        required: [true, "Title field is required.\n"],
+        minlength: [3, 'Title too short! Input a longer title.\n']
     },
     author: {
         type: String,
-        required: true,
-        minlength: 3
+        required: [true, `Author field is required\n`],
+        minlength: [3, `Author's field's not long enough!\n`]
     },
     url:{ 
         type: String,
-        required: true,
-        minlength: 3
+        required: [true, 'URL field is required'],
+        minlength: [3, 'URL too short! \n']
     },
     likes: {
         type: Number,
-        minlength: 3,
         default: 0
     },
     user: {

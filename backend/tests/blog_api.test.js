@@ -195,7 +195,7 @@ describe('User verification', () => {
             .post('/api/login')
             .send(user)
             .expect(401)
-
+            
         assert.deepStrictEqual(response.body.error,
             'invalid username or password' 
         )
