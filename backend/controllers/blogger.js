@@ -1,5 +1,6 @@
 //initializes
 const blogRouter = require('express').Router();
+const blog = require('../models/blog');
 const Blog = require('../models/blog');
 const middleware = require('../utils/middleware')
 
@@ -42,18 +43,18 @@ blogRouter.get('/:id', async (request, response) => {
 blogRouter.put('/:id', middleware.userExtractor, async (request, response) => {
   const id = request.params.id
   const adjustment = request.body;
-  const user = request.user;
+  
+  const blogBefore = await Blog.findById(id)
 
   const adjustedblog = {
     title: adjustment.title,
     author: adjustment.author,
     url: adjustment.url,
     likes: adjustment.likes,
-    user: user.id
+    user: blogBefore.user.toString()
   }
 
-  const result = await Blog.findByIdAndUpdate(id, adjustedblog)
-  console.log(result)
+  const result = await Blog.findByIdAndUpdate(id, adjustedblog, {new: true})
   response.status(200).json(result)
 })
 
@@ -63,7 +64,15 @@ blogRouter.delete('/:id', middleware.userExtractor, async (request, response) =>
   const id = request.params.id
   const user = request.user;
 
+  const blogBefore = await Blog.findById(id)
+
+  if (blogBefore.user.toString() !== user._id.toString())
+    return response.status(400).json(
+          {error: `User don't have valid permission.`}
+        )
+
   const result = await Blog.findByIdAndDelete(id)
+
   user.blogs = user.blogs.filter(blogId => blogId.toString() !== id)
   await user.save()
   response.status(200).json(result)

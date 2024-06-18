@@ -2,7 +2,6 @@ import { useState, useEffect } from 'react'
 import blogService from './services/blogs'
 import Login from './views/Login'
 import BlogDisplay from './views/BlogDisplay'
-import Notification from './components/Notification'
 
 const App = () => {
   const [user, setUser] = useState(null)
