@@ -1,7 +1,7 @@
 import Blog from './Blog'
 import { useState } from 'react'
 
-const BlogList = ({ blogs, handleDelete, user}) => {
+const BlogList = ({ blogs, handleDelete, handleLike, user}) => {
     if (!blogs.length) return null
     const [sortByLikes, setSortByLikes] = useState(false)
     
@@ -14,7 +14,7 @@ const BlogList = ({ blogs, handleDelete, user}) => {
             <button onClick={() => setSortByLikes(!sortByLikes)}> Most Liked</button>
         </div>
         {toShow.map(blog =>
-            <Blog handleDelete={handleDelete} key={blog.id} blog={blog} user={user} />
+            <Blog handleDelete={handleDelete} handleLike={handleLike} key={blog.id} blog={blog} user={user} />
         )}
     </div>
 }

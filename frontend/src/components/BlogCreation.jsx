@@ -1,55 +1,34 @@
 import { useState } from "react"
-import blogService from '../services/blogs'
 
-const errorMessage = message => {
-    const newMessage = message.split(',')
-    const newList = newMessage.map(each => {
-        const str = each.split(':')
-        return str.length === 3 ? str[2].trim() : str[1].trim()
+const BlogCreation = ({ handleBlogCreation, viewRef }) => {
+    const [blogToCreate, setBlogToCreate] = useState({
+        title: '',
+        author: '',
+        url: ''
     })
-    return newList.join('\n')
-}
 
-const BlogCreation = ({ setMessage, blogs, setBlogs, viewRef}) => {
-    const [title, setTitle] = useState('')
-    const [author, setAuthor] = useState('')
-    const [url, setUrl] = useState('')
-
-    const handleBlogCreation = async (event) => {
-        event.preventDefault()
-
-        const newBlog = {
-            "title": title,
-            "author": author,
-            "url": url
-        }
-        try {
-            const response = await blogService.create(newBlog)
-            setBlogs(blogs.concat(response))
-
-            setTitle("")
-            setAuthor('')
-            setUrl('')
-            viewRef.current.toggleVisibility()
-
-            setMessage(`New blog titled ${response.title} by ${response.author} has been added!`)
-            setTimeout(() => {
-                setMessage(null)
-            }, 5000)
-
-        } catch (error) {
-            setMessage(errorMessage(error.response.data.error))
-            setTimeout(() => {
-                setMessage(null)
-            }, 5000)
-        }
+    const handleChange = (event) => {
+        setBlogToCreate({
+            ...blogToCreate,
+            [event.target.id]: event.target.value
+        })
     }
 
-    return <form onSubmit={handleBlogCreation}>
+    const createBlog = (event) => {
+        event.preventDefault()
+        handleBlogCreation(blogToCreate)
+        setBlogToCreate({
+            title: '',
+            author: '',
+            url: ''
+        })
+    }
+
+    return <form onSubmit={createBlog}>
         <h3>Create a new blog</h3>
-        <p>Title  <input type='text' value={title} onChange={({ target }) => setTitle(target.value)}></input></p>
-        <p>Author <input type='text' value={author} onChange={({ target }) => setAuthor(target.value)}></input></p>
-        <p>Link  <input type='text' value={url} onChange={({ target }) => setUrl(target.value)}></input></p>
+        <p>Title  <input id='title' type='text' value={blogToCreate.title} onChange={handleChange}></input></p>
+        <p>Author <input id='author' type='text' value={blogToCreate.author} onChange={handleChange}></input></p>
+        <p>Link   <input id='url' type='text' value={blogToCreate.url} onChange={handleChange}></input></p>
         <button type='submit' > BLOG </button>
     </form>
 }
