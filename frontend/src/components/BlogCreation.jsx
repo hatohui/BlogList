@@ -26,9 +26,9 @@ const BlogCreation = ({ handleBlogCreation, viewRef }) => {
 
     return <form onSubmit={createBlog}>
         <h3>Create a new blog</h3>
-        <p>Title  <input id='title' type='text' value={blogToCreate.title} onChange={handleChange}></input></p>
-        <p>Author <input id='author' type='text' value={blogToCreate.author} onChange={handleChange}></input></p>
-        <p>Link   <input id='url' type='text' value={blogToCreate.url} onChange={handleChange}></input></p>
+        <p>Title  <input data-testid='title' id='title' type='text' value={blogToCreate.title} onChange={handleChange}></input></p>
+        <p>Author <input data-testid='author' id='author' type='text' value={blogToCreate.author} onChange={handleChange}></input></p>
+        <p>Link   <input data-testid='url' id='url' type='text' value={blogToCreate.url} onChange={handleChange}></input></p>
         <button type='submit' > BLOG </button>
     </form>
 }

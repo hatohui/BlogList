@@ -1,11 +1,10 @@
 const { test, expect, beforeEach, describe } = require('@playwright/test')
-
-const URL = 'http://localhost:3001'
+const {loginWith, createBlog} = require('./helper')
 
 describe('Blog app', () => {
   beforeEach(async ({ page, request }) => {
-    await request.post('http://localhost:3001/api/testing/reset')
-    await request.post('http://localhost:3001/api/users', {
+    await request.post('/api/testing/reset')
+    await request.post('/api/users', {
       data: {
         name: 'test',
         username: 'admin',
@@ -13,7 +12,7 @@ describe('Blog app', () => {
       }
     })
 
-    await page.goto(URL)
+    await page.goto('/')
   })
 
   test('Login form is shown', async ({ page }) => {
@@ -24,8 +23,8 @@ describe('Blog app', () => {
 
 describe('Login', () => {
   beforeEach(async ({ page, request }) => {
-    await request.post('http:localhost:3001/api/testing/reset')
-    await request.post('http://localhost:3001/api/users', {
+    await request.post('/api/testing/reset')
+    await request.post('/api/users', {
       data: {
         name: 'test',
         username: 'admin',
@@ -33,7 +32,7 @@ describe('Login', () => {
       }
     })
 
-    await page.goto(URL)
+    await page.goto('/')
   })
 
   test('succeeds with correct credentials', async ({ page }) => {
@@ -54,5 +53,26 @@ describe('Login', () => {
 })
 
 describe('When logged in', () => {
+  beforeEach(async ({ page, request }) => {
+    await request.post('/api/testing/reset')
+    await request.post('/api/users', {
+      data: {
+        name: 'test',
+        username: 'admin',
+        password: 'test'
+      }
+    })
 
+    await page.goto('/')
+    await loginWith(page, 'admin', 'test')
+  })
+
+  test('logged in as soon as test start', async ({page}) => {
+    await expect(page.getByText('Log out')).toBeVisible()
+  })
+
+  test('can create a new blog', async ({page}) => {
+    await createBlog(page, "Stuupid Zarachy", "ColonDHappyFace", "onlyfan.next")
+    await expect(page.getByText("Stuupid Zarachy ColonDHappyFace")).toBeVisible()
+  })
 })
