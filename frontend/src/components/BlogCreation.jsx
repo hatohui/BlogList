@@ -29,7 +29,8 @@ const BlogCreation = ({ handleBlogCreation, viewRef }) => {
         <p>Title  <input data-testid='title' id='title' type='text' value={blogToCreate.title} onChange={handleChange}></input></p>
         <p>Author <input data-testid='author' id='author' type='text' value={blogToCreate.author} onChange={handleChange}></input></p>
         <p>Link   <input data-testid='url' id='url' type='text' value={blogToCreate.url} onChange={handleChange}></input></p>
-        <button type='submit' > BLOG </button>
+        <button data-testid='submit' type='submit' > BLOG </button>
+        <br></br>
     </form>
 }
 

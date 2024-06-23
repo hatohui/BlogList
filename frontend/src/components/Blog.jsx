@@ -1,5 +1,4 @@
 import { useState } from "react"
-import blogService from '../services/blogs'
 
 const buttonStyle = {
   maxHeight: '2em',
@@ -31,9 +30,9 @@ const Blog = ({ blog, handleDelete, handleLike, user }) => {
         : <div>
           <p>Title: {blog.title}</p>
           <p>Link: {blog.url}</p>
-          <p>Likes {blog.likes}  <button onClick={handleLike} value={blog.id}> Like </button></p>
+          <p>Likes {blog.likes}  <button data-testId='like' onClick={handleLike} value={blog.id}> Like </button></p>
           <p>By {blog.author}</p>
-          {currentUser === currentBlogUser ? <button style={buttonStyle} value={blog.id} onClick={handleDelete}> Delete </button>
+          {currentUser === currentBlogUser ? <button data-testId='delete' style={buttonStyle} value={blog.id} onClick={handleDelete}> Delete </button>
             : null}
         </div>
     }
