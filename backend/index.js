@@ -1,6 +1,6 @@
 //imports
 const app = require('./app');
-const config = require('./utils/config');
+const config = require('./utils/config.jsx');
 const logger = require('./utils/logger');
 
 //loads then log the app

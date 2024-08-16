@@ -7,7 +7,7 @@ require('express-async-errors')
 
 //initializes utils
 const middleware = require('./utils/middleware')
-const config = require('./utils/config')
+const config = require('./utils/config.jsx')
 const logger = require('./utils/logger')
 
 
