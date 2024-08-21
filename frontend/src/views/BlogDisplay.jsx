@@ -4,20 +4,15 @@ import blogService from "../services/blogs";
 import Notification from "../components/Notification";
 import Togglable from "../components/Togglable";
 import BlogCreation from "../components/BlogCreation";
-
-const errorMessage = (message) => {
-  const newMessage = message.split(",");
-  const newList = newMessage.map((each) => {
-    const str = each.split(":");
-    return str.length === 3 ? str[2].trim() : str[1].trim();
-  });
-  return newList.join("\n");
-};
+import { useDispatch, useSelector } from "react-redux";
+import { setNotification } from "../reducers/notificationReducer";
 
 const BlogDisplay = ({ user, setUser }) => {
+  const curr = useSelector(({ session }) => session);
+  console.log(curr);
   const [blogs, setBlogs] = useState([]);
-  const [message, setMessage] = useState(null);
   const viewRef = useRef();
+  const dispatch = useDispatch();
 
   useEffect(() => {
     blogService.getAll().then((data) => {
@@ -41,15 +36,9 @@ const BlogDisplay = ({ user, setUser }) => {
     try {
       const response = await blogService.remove(event.target.value);
       setBlogs(blogs.filter((each) => each.id != response.id));
-      setMessage("Successfully removed blog!");
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
+      dispatch(setNotification("Successfully removed blog!"));
     } catch (error) {
-      setMessage(error.response.data.error);
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
+      dispatch(setNotification(error.response.data.error));
     }
   };
 
@@ -80,25 +69,20 @@ const BlogDisplay = ({ user, setUser }) => {
       const response = await blogService.create(newBlog);
       console.log(response);
       setBlogs(blogs.concat(response));
-      setMessage(
-        `New blog titled ${response.title} by ${response.author} has been added!`
+      dispatch(
+        setNotification(
+          `New blog titled ${response.title} by ${response.author} has been added!`
+        )
       );
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
     } catch (error) {
-      console.log(error);
-      setMessage(errorMessage(error.response.data.error));
-      setTimeout(() => {
-        setMessage(null);
-      }, 5000);
+      dispatch(setNotification(error.response.data.error));
     }
   };
 
   return (
     <div>
       <h2>Blogs</h2>
-      <Notification message={message} />
+      <Notification />
       <p>
         Logged in as {user.name}{" "}
         <button onClick={handleLogOut}> Log out</button>
@@ -114,7 +98,6 @@ const BlogDisplay = ({ user, setUser }) => {
         blogs={blogs}
         user={user}
         handleLike={handleLike}
-        setMessage={setMessage}
         handleDelete={handleDelete}
       />
     </div>

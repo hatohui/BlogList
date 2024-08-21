@@ -1,24 +1,31 @@
-import { useState, useEffect } from 'react'
-import blogService from './services/blogs'
-import Login from './views/Login'
-import BlogDisplay from './views/BlogDisplay'
+import { useState, useEffect } from "react";
+import blogService from "./services/blogs";
+import Login from "./views/Login";
+import BlogDisplay from "./views/BlogDisplay";
+import { useDispatch, useSelector } from "react-redux";
+import { Routes, Route } from "react-router-dom";
+import { setUser, userLogout } from "./reducers/sessionReducer";
 
 const App = () => {
-  const [user, setUser] = useState(null)
+  const dispatch = useDispatch();
 
   useEffect(() => {
-    const loggedInUser = window.localStorage.getItem('loggedInUser')
+    const loggedInUser = window.localStorage.getItem("loggedInUser");
     if (loggedInUser) {
-      const user = JSON.parse(loggedInUser)
-      setUser(user)
-      blogService.setToken(user.token)
+      const user = JSON.parse(loggedInUser);
+      dispatch(setUser(user));
+      blogService.setToken(user.token);
     }
-  }, [])
+  }, []);
 
-  return <div>
-    {user === null && <Login setUser={setUser}/>}
-    {user !== null && <BlogDisplay setUser={setUser} user={user}/>}
-  </div>
-}
+  const user = useSelector(({ session }) => session);
+  console.log("hello", user);
 
-export default App
+  return (
+    <Routes>
+      <Route path="/" element={<Login />}></Route>
+    </Routes>
+  );
+};
+
+export default App;
