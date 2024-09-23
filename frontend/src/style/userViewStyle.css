@@ -1,0 +1,15 @@
+.column {
+  display: flex;
+  align-content: space-between;
+  flex-wrap: wrap;
+  gap: 30px;
+}
+
+.name {
+  width: 150px;
+}
+
+.data {
+  width: 4;
+  align-items: end;
+}

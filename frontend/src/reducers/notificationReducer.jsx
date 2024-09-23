@@ -1,26 +1,25 @@
-import { createSlice, current } from "@reduxjs/toolkit";
+import { createSlice } from "@reduxjs/toolkit";
+import toast from "react-hot-toast";
 
 const notifSlice = createSlice({
   name: "notification",
   initialState: "",
   reducers: {
-    set(state, action) {
-      return action.payload;
+    warning(state, action) {
+      toast(action.payload);
     },
-    remove(state, action) {
-      return "";
+    success(state, action) {
+      toast(action.payload);
     },
   },
 });
 
-export const { set, remove } = notifSlice.actions;
+export const { warning, remove } = notifSlice.actions;
 export default notifSlice.reducer;
 
 export const setNotification = (message) => {
-  console.log("Hello");
-
   return (dispatch) => {
-    dispatch(set(message));
+    dispatch(warning(message));
     setTimeout(() => {
       dispatch(remove());
     }, 5000);

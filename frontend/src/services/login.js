@@ -6,7 +6,4 @@ const login = async (credentials) => {
   return response.data;
 };
 
-console.log(m.-d);
-
-
 export default { login };

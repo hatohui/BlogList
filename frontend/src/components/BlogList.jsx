@@ -1,22 +1,30 @@
-import Blog from './Blog'
-import { useState } from 'react'
+import { useSelector } from "react-redux";
+import Blog from "./Blog";
+import { useState } from "react";
 
-const BlogList = ({ blogs, handleDelete, handleLike, user}) => {
-    if (!blogs.length) return null
-    const [sortByLikes, setSortByLikes] = useState(false)
-    
-    const toShow = sortByLikes ? JSON.parse(JSON.stringify(blogs))
-                                .sort((first, second)=>second.likes - first.likes)
-                                : blogs
-    
-    return <div>
-        <div>
-            <button onClick={() => setSortByLikes(!sortByLikes)}> Most Liked</button>
-        </div>
-        {toShow.map(blog =>
-            <Blog handleDelete={handleDelete} handleLike={handleLike} key={blog.id} blog={blog} user={user} />
-        )}
+const BlogList = () => {
+  const [sortByLikes, setSortByLikes] = useState(false);
+  const blogs = useSelector(({ blogs }) => blogs);
+  const user = useSelector(({ session }) => session);
+
+  if (!blogs.length) return null;
+
+  const toShow = sortByLikes
+    ? [...blogs].sort((first, second) => second.likes - first.likes)
+    : blogs;
+
+  return (
+    <div>
+      <div>
+        <button onClick={() => setSortByLikes(!sortByLikes)}>
+          <span>Most Liked</span>
+        </button>
+      </div>
+      {toShow.map((blog) => (
+        <Blog key={blog.id} blog={blog} blogs={blogs} user={user} />
+      ))}
     </div>
-}
+  );
+};
 
-export default BlogList
+export default BlogList;

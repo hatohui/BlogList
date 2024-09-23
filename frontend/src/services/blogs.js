@@ -1,22 +1,25 @@
 import axios from "axios";
-const baseUrl = "http://localhost:3001/api/blogs";
 
+const baseUrl = "http://localhost:3001/api/blogs";
 let token = null;
 
 const setToken = (newToken) => {
-  token = "Bearer " + newToken;
+  token = newToken;
 };
 
-const getAll = () => {
-  const request = axios.get(baseUrl);
-  return request.then((response) => response.data);
+//fetch all data
+const getAll = async () => {
+  const response = await axios.get(baseUrl);
+  return response.data;
 };
 
+//find with Id
 const getById = async (id) => {
   const response = await axios.get(`${baseUrl}/${id}`);
   return response.data;
 };
 
+//remove
 const remove = async (id) => {
   const config = {
     headers: { Authorization: token },
@@ -26,6 +29,7 @@ const remove = async (id) => {
   return response.data;
 };
 
+//create new
 const create = async (newObject) => {
   const config = {
     headers: { Authorization: token },
@@ -34,6 +38,7 @@ const create = async (newObject) => {
   return response.data;
 };
 
+//update
 const update = async (id, newObject) => {
   const config = {
     headers: { Authorization: token },
@@ -42,4 +47,4 @@ const update = async (id, newObject) => {
   return request.data;
 };
 
-export default { getAll, create, setToken, update, remove, getById };
+export default { getAll, create, update, remove, getById, setToken };

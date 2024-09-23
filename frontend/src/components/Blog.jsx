@@ -1,46 +1,82 @@
-import { useState } from "react"
+import { useState } from "react";
+import { useDispatch, useSelector } from "react-redux";
+import { addLike, removeBlog } from "../reducers/blogReducer";
+import { Link } from "react-router-dom";
 
-const buttonStyle = {
-  maxHeight: '2em',
-  color: 'white',
-  border: '0.5px blue solid',
-  background: 'purple',
-  display: 'inline-flex',
-}
+const Blog = ({ blog, blogs }) => {
+  //init the datas
+  const [view, setView] = useState(true);
+  const [name, setName] = useState(blog.user.username);
+  const user = useSelector(({ session }) => session);
+  const userName = user.username;
 
-const blogStyle = {
-  border: '1px black solid',
-  justifyContent: 'center',
-  padding: 5,
-  maxWidth: 700,
-  margin: 'auto auto',
-  marginBottom: 10,
-  textAlign: 'center',
-  gap: 10
-}
+  //call for redux dispatch
+  const dispatch = useDispatch();
 
-const Blog = ({ blog, handleDelete, handleLike, user }) => {
-  const [view, setView] = useState(true)
-  const currentUser = user.username
-  const currentBlogUser = blog.user.username
+  //handle delete button
+  const handleDelete = (blogId) => {
+    const blog = blogs.find(({ id }) => id === blogId);
+    if (confirm(`Confirm removing ${blog.title}`)) dispatch(removeBlog(blog));
+  };
 
-  return <div style={blogStyle}>
-    {
-      view ? `${blog.title} ${blog.author}`
-        : <div>
-          <p>Title: {blog.title}</p>
-          <p>Link: {blog.url}</p>
-          <p>Likes {blog.likes}  <button data-testId='like' onClick={handleLike} value={blog.id}> Like </button></p>
-          <p>By {blog.author}</p>
-          {currentUser === currentBlogUser ? <button data-testId='delete' style={buttonStyle} value={blog.id} onClick={handleDelete}> Delete </button>
-            : null}
+  //handle like button
+  const handleLike = (blogId) => {
+    const blog = blogs.find(({ id }) => id === blogId);
+    dispatch(addLike(blog));
+  };
+
+  return (
+    <>
+      {view ? (
+        <div
+          onClick={() => setView(!view)}
+          className="btn btn-light card text-center mt-3 pb-3 lead"
+        >
+          <div className="card-header">{blog.author}</div>
+          <div className="card-body">
+            <Link to={`blogs/${blog.id}`}>{blog.title}</Link>
+          </div>
         </div>
-    }
-    <div />
-    <button style={buttonStyle} value={view} onClick={() => setView(!view)}>
-      {view ? 'View' : 'Hide'}
-    </button>
-  </div>
-}
+      ) : (
+        <div
+          onClick={() => setView(!view)}
+          className="card gap-2 btn container text-center mt-3 pb-3 lead"
+        >
+          <h6 className="lead card-title pt-2">{blog.title}</h6>
+          <hr class="bg-info border-2 border-top border-danger m-0" />
+          <div className="mt-3">{blog.url}</div>
+          <div>
+            By
+            <span className="card-subtitle mb-2 text-body-secondary">
+              {` ${blog.author}`}
+            </span>
+          </div>
+          <hr class="bg-info border-2 border-top border-danger" />
 
-export default Blog
+          <div className="column align-items-center gap-0 justify-content-evenly">
+            <button
+              className="btn btn-outline-danger"
+              onClick={() => handleLike(blog.id)}
+              value={blog.id}
+            >
+              <i className="bi-hand-thumbs-up"></i>
+              {blog.likes}
+            </button>
+            {userName === name ? (
+              <button
+                className="btn btn-outline-dark"
+                value={blog.id}
+                onClick={() => handleDelete(blog.id)}
+              >
+                <i className="bi bi-trash"></i>
+                Delete
+              </button>
+            ) : null}
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
+export default Blog;

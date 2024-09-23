@@ -1,5 +1,8 @@
 import { createSlice } from "@reduxjs/toolkit";
+import { setNotification } from "./notificationReducer";
 import loginService from "../services/login";
+import { useSelector } from "react-redux";
+import blogService from "../services/blogs.js";
 
 const sessionSlice = createSlice({
   name: "session",
@@ -11,10 +14,18 @@ const sessionSlice = createSlice({
   reducers: {
     logout(state, action) {
       window.localStorage.removeItem("loggedInUser");
-      return initialState;
+      return {
+        name: "",
+        username: "",
+        token: "",
+      };
     },
     setUser(state, action) {
-      console.log("here", action.payload);
+      window.localStorage.setItem(
+        "loggedInUser",
+        JSON.stringify(action.payload)
+      );
+      blogService.setToken(action.payload.token);
       return action.payload;
     },
   },
@@ -23,22 +34,33 @@ const sessionSlice = createSlice({
 export const { login, logout, setUser } = sessionSlice.actions;
 export default sessionSlice.reducer;
 
-export const userLogin = async (credentials) => {
+//handle login
+export const userLogin = (credentials, navigate) => {
   return async (dispatch) => {
     try {
       const data = await loginService.login(credentials);
-      console.log("the data", data);
-
-      // window.localStorage.setItem("loggedInUser", JSON.stringify(data));
-      // dispatch(setUser(data));
+      const newToken = "Bearer " + data.token;
+      blogService.setToken(newToken);
+      dispatch(setUser({ ...data, token: newToken }));
+      navigate(-1);
     } catch (exception) {
-      console.log(exception);
+      const message = exception.response.data.error;
+      dispatch(setNotification(message));
     }
   };
 };
 
+//log out
 export const userLogout = () => {
+  blogService.setToken(null);
   return (dispatch) => {
-    dispatch(logout);
+    dispatch(logout());
   };
+};
+
+//use login
+export const isLoggedIn = () => {
+  const loggedInUser = window.localStorage.getItem("loggedInUser");
+  if (!loggedInUser) return false;
+  return true;
 };
