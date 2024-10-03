@@ -38,12 +38,9 @@ const Blog = ({ blog, blogs }) => {
           </div>
         </div>
       ) : (
-        <div
-          onClick={() => setView(!view)}
-          className="card gap-2 btn container text-center mt-3 pb-3 lead"
-        >
+        <div className="card gap-2 btn container text-center mt-3 pb-3 lead">
           <h6 className="lead card-title pt-2">{blog.title}</h6>
-          <hr class="bg-info border-2 border-top border-danger m-0" />
+          <hr className="bg-info border-2 border-top border-danger m-0" />
           <div className="mt-3">{blog.url}</div>
           <div>
             By
@@ -51,7 +48,7 @@ const Blog = ({ blog, blogs }) => {
               {` ${blog.author}`}
             </span>
           </div>
-          <hr class="bg-info border-2 border-top border-danger" />
+          <hr className="bg-info border-2 border-top border-danger" />
 
           <div className="column align-items-center gap-0 justify-content-evenly">
             <button

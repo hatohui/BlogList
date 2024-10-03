@@ -1,5 +1,6 @@
 import { createSlice } from "@reduxjs/toolkit";
 import userService from "../services/users";
+import { setNotification } from "./notificationReducer";
 
 const userSlice = createSlice({
   name: "users",
